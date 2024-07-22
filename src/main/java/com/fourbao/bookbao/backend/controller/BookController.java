@@ -8,6 +8,7 @@ import com.fourbao.bookbao.backend.dto.request.UpdateBookRequest;
 import com.fourbao.bookbao.backend.dto.response.BookDetailResponse;
 import com.fourbao.bookbao.backend.dto.response.SearchBookResponse;
 import com.fourbao.bookbao.backend.service.BookService;
+import com.fourbao.bookbao.backend.swagger.book.BookApi;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,9 @@ public class BookController {
     private final BookService bookService;
 
     // 도서 등록
+    @BookApi
     @PostMapping("/enroll")
-    public BaseResponse<String> enrollBookRequestBaseResponse(HttpServletRequest request, @RequestBody EnrollBookRequest enrollBookRequest) {
+    public BaseResponse<String> enrollBook(HttpServletRequest request, @RequestBody EnrollBookRequest enrollBookRequest) {
         try {
             bookService.saveBook(request, enrollBookRequest);
             return new BaseResponse<>("도서 등록에 성공하였습니다.");
@@ -36,6 +38,7 @@ public class BookController {
     }
 
     //도서 검색 기능
+    @BookApi
     @GetMapping("/search")
     public BaseResponse<List<SearchBookResponse>> searchBooks(HttpServletRequest request, @RequestParam String search) {
         try {
@@ -47,6 +50,7 @@ public class BookController {
     }
 
     // 도서 정보 수정
+    @BookApi
     @PatchMapping("/update")
     public BaseResponse<String> updateBookInfo(HttpServletRequest request, @RequestBody UpdateBookRequest updateBookRequest) {
         try {
@@ -58,6 +62,7 @@ public class BookController {
     }
 
     // 도서 상세 정보 조회
+    @BookApi
     @GetMapping("/detail")
     public BaseResponse<BookDetailResponse> getBookDetail(HttpServletRequest request, @RequestParam Long id) {
         try {
@@ -69,6 +74,7 @@ public class BookController {
     }
 
     // 도서 삭제
+    @BookApi
     @DeleteMapping("/delete")
     public BaseResponse<String> deleteBook(HttpServletRequest request, @RequestParam Long id) {
         try {

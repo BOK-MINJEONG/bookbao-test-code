@@ -4,6 +4,7 @@ import com.fourbao.bookbao.backend.common.exception.BaseException;
 import com.fourbao.bookbao.backend.common.response.BaseResponse;
 import com.fourbao.bookbao.backend.dto.request.UserLoginRequest;
 import com.fourbao.bookbao.backend.service.LoginService;
+import com.fourbao.bookbao.backend.swagger.login.UserLoginApi;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
     private final LoginService loginService;
 
+    @UserLoginApi
     @PostMapping("/login")
     public BaseResponse<String> login(@Valid @RequestBody UserLoginRequest userLoginRequest, HttpServletRequest httpServletRequest, HttpServletResponse response, BindingResult result) {
         if (result.hasErrors()) {

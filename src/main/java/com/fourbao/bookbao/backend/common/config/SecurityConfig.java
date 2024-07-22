@@ -7,17 +7,12 @@ import com.fourbao.bookbao.backend.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -34,38 +29,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class)
+                .csrf((csrf) -> csrf.disable())
                 .sessionManagement((sessionManagement) ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .userDetailsService(bookBaoPrincipalService)
-                .addFilter(this.corsFilter())
-                // jwt filter
-                .addFilterBefore(
-                        new JwtAuthorizationFilter(userRepository, jwtUtils),
-                        BasicAuthenticationFilter.class
+                .authorizeHttpRequests((authorizeHttpRequests) ->
+                        authorizeHttpRequests
+//                                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // 정적 resources 접근 허용 설정
+                                .requestMatchers("/api/v1/login").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-ui/**").permitAll()
+                                .anyRequest().authenticated() // 그 외 모든 요청 인증처리
                 )
-                .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.anyRequest().authenticated()
-                )
-                .logout(logout ->
-                        logout.logoutSuccessUrl("/")
-                                .deleteCookies("JSESSIONID")
-                );
+                .addFilterBefore(new JwtAuthorizationFilter(userRepository, jwtUtils), BasicAuthenticationFilter.class)
+                .userDetailsService(bookBaoPrincipalService);
+
 
         return httpSecurity.build();
     }
 
-    // NON_AUTHENTICATED에 담긴 패턴은 ignore
-    @Bean
-    public WebSecurityCustomizer securityCustomizer() {
-        final String[] NON_AUTHENTICATED = {
-                "/api/v1/**"
-        };
-        return web -> {
-            web.ignoring().requestMatchers(NON_AUTHENTICATED);
-        };
-    }
+//    // NON_AUTHENTICATED에 담긴 패턴은 ignore
+//    @Bean
+//    public WebSecurityCustomizer securityCustomizer() {
+//        final String[] NON_AUTHENTICATED = {
+//                "/api/v1/login", "/swagger-ui/**", "/v3/**","/swagger-ui.html"
+//        };
+//        return web -> {
+//            web.ignoring().requestMatchers(NON_AUTHENTICATED);
+//        };
+//    }
 
 
     @Bean
@@ -77,9 +70,6 @@ public class SecurityConfig {
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.addExposedHeader("Authorization");
-        config.addExposedHeader("Set-Cookie");
-        config.addExposedHeader("Cookie");
-        config.addExposedHeader("X-Session-ID");
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);

@@ -36,10 +36,21 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        log.info("[JwtAuthorizationFilter] Authorization start");
+//        log.info("[JwtAuthorizationFilter] Authorization start");
+
+        // 요청 경로에서 JWT 인증을 건너뛰기
+        String requestURI = request.getRequestURI();
+        if (requestURI.startsWith("/api/v1/login") ||
+                requestURI.startsWith("/swagger-ui/") ||
+                requestURI.startsWith("/v3/api-docs/") ||
+                requestURI.startsWith("/swagger-ui.html")) {
+//            log.info("Skipping JWT authentication for path: {}", requestURI);
+            chain.doFilter(request, response);
+            return;
+        }
+
         String jwtHeader = request.getHeader("Authorization");
 
         // header 유무 확인
