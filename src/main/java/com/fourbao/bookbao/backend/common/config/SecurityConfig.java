@@ -1,4 +1,4 @@
-package com.fourbao.bookbao.backend.common.security;
+package com.fourbao.bookbao.backend.common.config;
 
 import com.fourbao.bookbao.backend.filter.JwtAuthorizationFilter;
 import com.fourbao.bookbao.backend.repository.UserRepository;
